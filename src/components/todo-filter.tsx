@@ -1,9 +1,10 @@
 import { component$ } from "@builder.io/qwik";
+import type { QRL } from "@builder.io/qwik";
 import type { Filter } from "~/types";
 
 interface TodoFilterProps {
   currentFilter: Filter;
-  onFilterChange: (filter: Filter) => void;
+  onFilterChange: QRL<(filter: Filter) => void>;
 }
 
 export const TodoFilter = component$<TodoFilterProps>(

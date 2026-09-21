@@ -1,7 +1,8 @@
 import { component$, useSignal } from "@builder.io/qwik";
+import type { QRL } from "@builder.io/qwik";
 
 interface TodoInputProps {
-  onAddTodo: (text: string) => void;
+  onAddTodo: QRL<(text: string) => void>;
 }
 
 export const TodoInput = component$<TodoInputProps>(({ onAddTodo }) => {

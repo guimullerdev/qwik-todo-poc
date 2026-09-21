@@ -1,10 +1,11 @@
 import { component$ } from "@builder.io/qwik";
+import type { QRL } from "@builder.io/qwik";
 import type { Todo } from "~/types";
 
 interface TodoItemProps {
   todo: Todo;
-  onToggle: (id: string) => void;
-  onRemove: (id: string) => void;
+  onToggle: QRL<(id: string) => void>;
+  onRemove: QRL<(id: string) => void>;
 }
 
 export const TodoItem = component$<TodoItemProps>(

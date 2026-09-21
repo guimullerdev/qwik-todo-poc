@@ -9,15 +9,26 @@
 
 ### Stack instalada
 
-| Item                                           | Versão no projeto                  | Última publicada (set/2026) |
-| ---------------------------------------------- | ---------------------------------- | --------------------------- |
-| `@builder.io/qwik`                             | `^1.16.0`                          | **1.20.0**                  |
-| `@builder.io/qwik-city`                        | `^1.16.0`                          | **1.20.0**                  |
-| Qwik 2 (`@qwik.dev/core` / `@qwik.dev/router`) | não usado                          | **2.0.0-beta.43**           |
-| Tailwind CSS                                   | `^4.1.4` (via `@tailwindcss/vite`) | v4                          |
-| Vite                                           | `7.1.0`                            | —                           |
-| TypeScript                                     | `5.4.5`                            | —                           |
-| Node (`.nvmrc`)                                | `v22.15.0`                         | local atual: `v24.13.1` ⚠️  |
+> Atualizado em 2026-09-21 (PR #1): toda a stack foi para a última versão estável.
+
+| Item                                           | Antes      | Agora          | Observação                             |
+| ---------------------------------------------- | ---------- | -------------- | -------------------------------------- |
+| `@builder.io/qwik`                             | `^1.16.0`  | **`^1.20.0`**  | última estável                         |
+| `@builder.io/qwik-city`                        | `^1.16.0`  | **`^1.20.0`**  | última estável                         |
+| `eslint-plugin-qwik`                           | `^1.16.0`  | **`^1.20.0`**  |                                        |
+| Qwik 2 (`@qwik.dev/core` / `@qwik.dev/router`) | não usado  | não usado      | `2.0.0-beta.43` — ver Fase 5           |
+| Tailwind CSS                                   | `^4.1.4`   | **`^4.3.3`**   |                                        |
+| Vite                                           | `7.1.0`    | **`^7.3.6`**   | 🔒 segurado: Qwik 1.20 pede `>=5 <8`   |
+| TypeScript                                     | `5.4.5`    | **`^5.9.3`**   | 🔒 segurado: ts-eslint pede `<6.1.0`   |
+| ESLint                                         | `9.32.0`   | **`^10.11.0`** |                                        |
+| Prettier                                       | `3.6.2`    | **`^3.9.8`**   |                                        |
+| `@types/node`                                  | `20.19.0`  | **`^24.13.6`** | alinhado ao Node local                 |
+| Node (`.nvmrc`)                                | `v22.15.0` | `v22.15.0`     | local roda `v24.13.1` ⚠️ ainda diverge |
+
+**Por que Vite e TypeScript não foram para o "latest absoluto":** os peer deps proíbem.
+`@builder.io/qwik@1.20.0` declara `vite: ">=5 <8"` (Vite 8 existe, mas não é suportado)
+e `typescript-eslint@8.70.1` declara `typescript: ">=4.8.4 <6.1.0"` (TS 7 existe, mas não é suportado).
+Subir qualquer um dos dois exige esperar Qwik 2 / typescript-eslint 9.
 
 ### O que existe hoje
 
@@ -79,12 +90,13 @@ Ela usa Qwik como se fosse React. Nada aqui prova a tese do framework.
 4. **`src/components/todo-input.tsx:19` — `onKeyPress$`.**
    `keypress` é um evento DOM **deprecado**. → `onKeyDown$`.
 
-5. **Props de callback tipadas como função nua.**
-   `onAddTodo: (text: string) => void` recebe na prática um QRL.
-   → Tipar como `QRL<(text: string) => void>` (ou `PropFunction<...>` no Qwik 1.x)
-   para o type-check refletir o boundary real.
+5. ~~**Props de callback tipadas como função nua.**~~ ✅ **CORRIGIDO no PR #1.**
+   `onAddTodo: (text: string) => void` recebia na prática um QRL, o que disparava
+   5 erros de `qwik/valid-lexical-scope`. Como `qwik build` roda `lint` no pipeline,
+   **o projeto não buildava desde o commit inicial**. Agora tipado como `QRL<(text: string) => void>`.
+   (`PropFunction<T>` é alias de `QRL<T>` no Qwik 1.x — ambos funcionam.)
 
-6. **`.nvmrc` (v22.15.0) diverge do Node local (v24.13.1)** e `node_modules` não está instalado.
+6. **`.nvmrc` (v22.15.0) diverge do Node local (v24.13.1).** Ainda em aberto.
 
 ---
 
@@ -422,8 +434,10 @@ const active = useComputed$(() => todos.value.filter((t) => !t.done));
 
 ### Preparação
 
-- [ ] `nvm use` (alinhar `.nvmrc` v22.15.0 ↔ Node local v24.13.1) e `yarn install`
-- [ ] `yarn start` — confirmar que a POC sobe
+- [x] `yarn install` com a stack atualizada — OK, sem conflito de peer deps
+- [x] `yarn build` passando (type check + lint + client modules)
+- [ ] `nvm use` (alinhar `.nvmrc` v22.15.0 ↔ Node local v24.13.1)
+- [ ] `yarn start` — confirmar a POC no browser (SSR já validado via curl: HTTP 200)
 - [ ] Decidir se o repo continua público (ver seção 5)
 
 ### Limpeza da POC (Fase 1–2)
@@ -432,8 +446,8 @@ const active = useComputed$(() => todos.value.filter((t) => !t.done));
 - [ ] Implementar ou remover `TodoContext` em `src/store/todos.ts`
 - [ ] Usar ou remover `useServerTimeLoader` em `src/routes/layout.tsx`
 - [ ] `onKeyPress$` → `onKeyDown$` em `src/components/todo-input.tsx`
-- [ ] Tipar callbacks como `QRL<...>`
-- [ ] `yarn lint` limpo (o `eslint-plugin-qwik` pega violação de regra do `$`)
+- [x] Tipar callbacks como `QRL<...>` — feito no PR #1
+- [x] `yarn lint` sem erros (resta 1 warning: o `useVisibleTask$` acima)
 
 ### Construção do TaskFlow (Fase 3)
 
